@@ -15,7 +15,7 @@ from .mantra import handle_mantra, handle_mantra_category
 from .diary import open_diary, process_diary_entry, cmd_mydiary, DiaryStates
 from .location import register_location_handler
 
-from .checkpoints import send_checkpoints
+from .checkpoints import send_checkpoints_menu, process_checkpoints_choice, register_checkpoints
 from .stats import handle_stats_button, process_show_group_stats
 from db import get_mantra_categories
 
@@ -62,7 +62,9 @@ def register_all_handlers(dp: any, geocode: RateLimiter, astral_geo: AstralLooku
     register_location_handler(dp, geocode, astral_geo)
 
     # 🌄 Чекпоинты — вывод списка мантр для рассвета/заката
-    dp.message.register(send_checkpoints, F.text == "🌄 Чекпоинты")
+    dp.message.register(send_checkpoints_menu, F.text == "🌄 Встреча восхода и заката")
+    register_checkpoints(dp)
+
 
     # stats
     dp.message.register(handle_stats_button, F.text == "📊 Статистика")

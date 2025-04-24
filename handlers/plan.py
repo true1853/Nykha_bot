@@ -40,12 +40,14 @@ async def handle_plan(message: types.Message) -> None:
         )
         return
 
+    # Рассвет и закат
     sun = get_sun_times(
         user_data["lat"], user_data["lon"], user_data["tz"], user_data["city"]
     )
     sunrise = sun.get("sunrise").strftime("%H:%M:%S") if sun.get("sunrise") else "н/д"
     sunset = sun.get("sunset").strftime("%H:%M:%S") if sun.get("sunset") else "н/д"
 
+    # Статус выполнения
     status = await get_daily_activity_status(user_id)
     rings = []
     for c in ACTIVITY_CATEGORIES:
@@ -53,30 +55,29 @@ async def handle_plan(message: types.Message) -> None:
         name = CATEGORY_NAMES_MAP[c]
         done = "🟢" if status.get(c) else "⚪️"
         rings.append(f"{emoji} {done} {escape_md(name)}")
-    rings_text = " \\| ".join(rings)
+    rings_text = " \| ".join(rings)
 
+    # Фаза и задачи
     phase = user_data.get("current_phase", DEFAULT_PHASE)
+    week_title = TASKS.get(phase, {}).get("title", "")
     main_task = TASKS.get(phase, {}).get("daily_habit", "Практика дня")
     main_cat = HABIT_CATEGORY_MAP.get("daily_habit", "mindfulness")
     main_emoji = CATEGORY_EMOJI_MAP[main_cat]
     main_name = CATEGORY_NAMES_MAP[main_cat]
 
-    # Экранируем скобки \( и \) в MarkdownV2
-    plan_text = f"""🗓️ *План на {escape_md(date.today().strftime('%d.%m.%Y'))}* \\({escape_md(user_data['city'])}\\)
+    # Формируем текст плана
+    plan_text = (
+        f"🗓️ *{escape_md(week_title)}* — {escape_md(date.today().strftime('%d.%m.%Y'))} "
+        f"\({escape_md(user_data['city'])}\)\n\n"
+    )
+    plan_text += f"🌅 *Утренний ритуал*:\n   – Мантра: \"{escape_md(main_task)}\"\n"
+    plan_text += f"🔔 Время рассвета: `{escape_md(sunrise)}`\n\n"
+    plan_text += f"🏃 *Природный фитнес*\n\n"
+    plan_text += f"🌍 *Дневная практика*: {main_emoji} {escape_md(main_name)}\n\n"
+    plan_text += f"🔔 Время заката: `{escape_md(sunset)}`\n\n"
+    plan_text += f"💚 *Прогресс дня:* {escape_md(rings_text)}"
 
-🌅 *Утренний ритуал*:
-   – Мантра: "{escape_md(main_task)}"
-🔔 Время рассвета: `{escape_md(sunrise)}`
-
-🏃 *Природный фитнес*
-
-🌍 *Дневная практика*: {main_emoji} {escape_md(main_name)}
-
-🔔 Время заката: `{escape_md(sunset)}`
-
-💚 *Прогресс дня:* {escape_md(rings_text)}
-"""
-
+    # Кнопки для логирования
     buttons = [
         InlineKeyboardButton(
             text=f"{'✅' if status.get(c) else CATEGORY_EMOJI_MAP[c]} {CATEGORY_NAMES_MAP[c]}",

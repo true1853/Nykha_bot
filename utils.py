@@ -3,11 +3,11 @@ utils.py
 
 Общие утилиты:
  - Экранирование MarkdownV2
- - Получение времени восхода/заката для координат
+ - Получение времени восхода/заката для координат, произвольной даты
 """
 import logging
 from datetime import date, datetime
-from typing import TypedDict, Optional
+from typing import TypedDict, Optional, Union
 
 import pytz
 from astral import LocationInfo
@@ -53,16 +53,18 @@ def get_sun_times(
     lat: float,
     lon: float,
     tz_str: str,
-    city_name: str = "Default"
+    city_name: str = "Default",
+    target_date: Union[date, None] = None
 ) -> SunTimes:
     """
-    Возвращает время восхода и заката для заданных координат и часового пояса.
+    Возвращает время восхода и заката для заданных координат, часового пояса и даты.
 
     Args:
         lat: Широта.
         lon: Долгота.
         tz_str: Строка часового пояса (например, 'Europe/Moscow').
         city_name: Имя локации для логирования.
+        target_date: Дата, для которой считать времена. Если None, берётся сегодня.
 
     Returns:
         Словарь с ключами 'sunrise' и 'sunset'.
@@ -76,14 +78,14 @@ def get_sun_times(
             longitude=lon
         )
         tz = pytz.timezone(tz_str)
-        today: date = datetime.now(tz).date()
-        s = sun(observer=loc.observer, date=today, tzinfo=tz)
+        calc_date = target_date if target_date is not None else datetime.now(tz).date()
+        s = sun(observer=loc.observer, date=calc_date, tzinfo=tz)
 
         return SunTimes(sunrise=s.get("sunrise"), sunset=s.get("sunset"))  # type: ignore
 
     except Exception as exc:
         logger.error(
-            "Error calculating sun times for %s (lat=%s, lon=%s, tz=%s): %s",
-            city_name, lat, lon, tz_str, exc
+            "Error calculating sun times for %s (lat=%s, lon=%s, tz=%s, date=%s): %s",
+            city_name, lat, lon, tz_str, target_date, exc
         )
         return SunTimes(sunrise=None, sunset=None)  # type: ignore
