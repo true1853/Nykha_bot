@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_TOKEN = os.getenv("API_TOKEN", "7711989010:AAFaX5Cn1vld5Pk-R3g3MdR0RrwsbgFYYuE")
+API_TOKEN = os.getenv("API_TOKEN")
 
 # Имя файла для хранения данных SQLite
 DATABASE_FILE = os.getenv("DATABASE_FILE", "farnpathbot.db")
