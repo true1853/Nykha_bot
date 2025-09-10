@@ -1,0 +1,7 @@
+aiogram
+python-dotenv
+APScheduler
+astral
+pytz
+geopy
+aiosqlite
